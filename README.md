@@ -1,33 +1,30 @@
 # Strategic Sales Forecasting
-##Project Overview
 
+## Project Overview
 
 SalesForecasting is a lightweight Python package for automated time-series forecasting of sales data. It streamlines data preparation, model selection, training and evaluation under a simple API.
 
-Main Features
+### Main Features
+- Automatic ETS-based modeling  
+  • Supports additive and multiplicative seasonality  
+  • Selects trend and seasonality components intelligently  
+- Confidence intervals and uncertainty quantification  
+- Batch forecasting across multiple series (e.g., by product_id)  
+- Built-in evaluation (MAE, RMSE) on hold-out sets  
+- Customizable hyperparameters for advanced tuning  
+- Pandas-friendly API and DataFrame outputs  
 
+### Typical Use Cases
+- Retail demand planning (daily, weekly or monthly)  
+- E-commerce SKU-level sales projection  
+- Revenue forecasting and budget planning  
+- Inventory optimization and replenishment scheduling  
+- Automated reporting pipelines and dashboards  
 
-Automatic ETS-based modeling
-• Supports additive and multiplicative seasonality
-• Selects trend and seasonality components intelligently
-Confidence intervals and uncertainty quantification
-Batch forecasting across multiple series (e.g., by product_id)
-Built-in evaluation (MAE, RMSE) on hold-out sets
-Customizable hyperparameters for advanced tuning
-Pandas-friendly API and DataFrame outputs
-Typical Use Cases
+### Minimal Example
+Import the core `Forecaster` class and run a simple forecast:
 
-
-Retail demand planning (daily, weekly or monthly)
-E-commerce SKU-level sales projection
-Revenue forecasting and budget planning
-Inventory optimization and replenishment scheduling
-Automated reporting pipelines and dashboards
-Minimal Example
-
-
-Import the core Forecaster class and run a simple forecast:
-
+```python
 from salesforecasting import Forecaster
 import pandas as pd
 
@@ -41,45 +38,42 @@ fc.fit(df, date_col="date", value_col="sales")
 # Generate forecasts with confidence intervals
 forecast_df = fc.predict()
 print(forecast_df.head())
+```
 
-
-This snippet illustrates SalesForecasting’s end-to-end workflow: load data, fit the model, and retrieve forecasts ready for analysis or visualization. Which Getting Started subsection would you like next? Please provide the subsection title (for example, “Minimal Configuration” or “Running Your First Forecast”) and any relevant code snippets or file summaries so I can draft targeted, actionable documentation.
-
-Core Concepts & Architecture
-
+This snippet illustrates SalesForecasting’s end-to-end workflow: load data, fit the model, and retrieve forecasts ready for analysis or visualization.
+Which Getting Started subsection would you like next? Please provide the subsection title (for example, “Minimal Configuration” or “Running Your First Forecast”) and any relevant code snippets or file summaries so I can draft targeted, actionable documentation.
+## Core Concepts & Architecture
 
 This section outlines the key building blocks of the SalesForecasting library, shows how they interact, and explains how to extend or customize each layer.
 
-1. Package Structure
+### 1. Package Structure
 
+salesforecasting/  
+├─ config.py          # Loads YAML config into Python objects  
+├─ cli.py             # Command-line entry point  
+├─ data/  
+│   ├─ connector.py   # Data source abstractions (DB, CSV, API)  
+│   └─ loader.py      # Cleans & assembles raw time‐series  
+├─ features/  
+│   ├─ base.py         # FeatureGenerator interface  
+│   └─ transforms.py   # Common feature transforms (lags, rolling)  
+├─ models/  
+│   ├─ base.py         # ForecastModel abstract class  
+│   ├─ arima.py        # ARIMA implementation  
+│   └─ xgboost.py      # Gradient-boosted tree model  
+├─ pipelines/  
+│   ├─ training.py     # TrainingPipeline orchestration  
+│   └─ forecasting.py  # ForecastPipeline (inference + post-processing)  
+└─ utils/  
+    ├─ logging.py      # Centralized logger setup  
+    └─ metrics.py      # Evaluation metrics (MAE, RMSE)
 
-salesforecasting/
-├─ config.py # Loads YAML config into Python objects
-├─ cli.py # Command-line entry point
-├─ data/
-│ ├─ connector.py # Data source abstractions (DB, CSV, API)
-│ └─ loader.py # Cleans & assembles raw time‐series
-├─ features/
-│ ├─ base.py # FeatureGenerator interface
-│ └─ transforms.py # Common feature transforms (lags, rolling)
-├─ models/
-│ ├─ base.py # ForecastModel abstract class
-│ ├─ arima.py # ARIMA implementation
-│ └─ xgboost.py # Gradient-boosted tree model
-├─ pipelines/
-│ ├─ training.py # TrainingPipeline orchestration
-│ └─ forecasting.py # ForecastPipeline (inference + post-processing)
-└─ utils/
-├─ logging.py # Centralized logger setup
-└─ metrics.py # Evaluation metrics (MAE, RMSE)
+### 2. Configuration Driven
 
-2. Configuration Driven
+salesforecasting uses a single `config.yaml` to wire data sources, feature sets, models, and runtime settings.
 
-
-salesforecasting uses a single config.yaml to wire data sources, feature sets, models, and runtime settings.
-
-Example config.yaml:
-
+Example `config.yaml`:
+```yaml
 data:
   type: csv
   path: data/sales.csv
@@ -104,22 +98,22 @@ pipeline:
 logging:
   level: INFO
   file: logs/forecast.log
-
+```
 
 Load config in code:
-
+```python
 from salesforecasting.config import load_config
 
 cfg = load_config("config.yaml")
 print(cfg.model.type)             # e.g. "xgboost"
 print(cfg.pipeline.forecast_horizon)
+```
 
-
-3. Data Ingestion Layer
-
+### 3. Data Ingestion Layer
 
 DataConnector and DataLoader abstract away source specifics:
 
+```python
 from salesforecasting.data.connector import CsvConnector
 from salesforecasting.data.loader import DataLoader
 
@@ -131,22 +125,22 @@ conn = CsvConnector(path=cfg.data.path,
 # 2. Load and clean raw data
 loader = DataLoader(connector=conn)
 df_raw = loader.load()   # pandas DataFrame with date & target
-
+```
 
 Extend to new sources:
-
+```python
 # In data/connector.py
 class MyApiConnector(BaseConnector):
     def fetch(self) -> pd.DataFrame:
         # call REST, parse JSON into DataFrame
         ...
+```
 
-
-4. Feature Engineering Layer
-
+### 4. Feature Engineering Layer
 
 FeatureGenerators decorate raw series:
 
+```python
 from salesforecasting.features.transforms import LagFeature, RollingFeature
 from salesforecasting.features.base import FeaturePipeline
 
@@ -158,10 +152,10 @@ for window in cfg.features.rolling_windows:
     feat_pipe.add(RollingFeature(window=window, agg="mean"))
 
 df_features = feat_pipe.transform(df_raw)
-
+```
 
 To add custom feature:
-
+```python
 # In features/custom.py
 from salesforecasting.features.base import FeatureGenerator
 
@@ -172,22 +166,22 @@ class HolidayIndicator(FeatureGenerator):
 
 # Register in pipeline:
 feat_pipe.add(HolidayIndicator())
+```
 
+### 5. Modeling Layer
 
-5. Modeling Layer
+ForecastModel defines `fit` / `predict` API. Example with XGBoost:
 
-
-ForecastModel defines fit / predict API. Example with XGBoost:
-
+```python
 from salesforecasting.models.xgboost import XGBoostModel
 
 model = XGBoostModel(**cfg.model.hyperparameters)
 model.fit(df_features)                    # trains on features + target
 future_preds = model.predict(horizon=30)  # returns pd.Series indexed by date
-
+```
 
 To implement a new model:
-
+```python
 # In models/my_model.py
 from salesforecasting.models.base import ForecastModel
 
@@ -196,57 +190,62 @@ class MyModel(ForecastModel):
         # train logic
     def predict(self, horizon):
         # inference logic
+```
 
-
-6. Pipeline Orchestration
-
+### 6. Pipeline Orchestration
 
 Pre-built pipelines wire all layers end-to-end:
 
 Training:
-
+```python
 from salesforecasting.pipelines.training import TrainingPipeline
 
 train_pipe = TrainingPipeline(config=cfg)
 train_pipe.run()   # loads data, applies features, trains & persists model
-
+```
 
 Forecasting:
-
+```python
 from salesforecasting.pipelines.forecasting import ForecastPipeline
 
 forecast_pipe = ForecastPipeline(config=cfg)
 forecast_df = forecast_pipe.run()  # includes predictions + evaluation
 print(forecast_df.tail())
+```
 
-
-7. Command-Line Interface
-
+### 7. Command-Line Interface
 
 Invoke end-to-end workflows without code:
 
+```bash
 # Train model and save artifacts
 salesforecast --config config.yaml train
 
 # Generate forecasts
 salesforecast --config config.yaml forecast
+```
 
+### 8. Extensibility & Customization
 
-8. Extensibility & Customization
+- Add connectors, feature generators, or models by subclassing respective base classes.  
+- Update `config.yaml` to include your new components.  
+- Leverage the CLI for rapid experimentation and integration into CI/CD.
 
+By understanding these core layers—data, features, models, pipelines—and their configuration, you can tailor SalesForecasting for custom data sources, novel features, and advanced forecasting algorithms.
+I’m ready to draft the “Configuration & Customisation” subsection—please provide:
 
--Add connectors, feature generators, or models by subclassing respective base classes.
--Update config.yaml to include your new components.
--Leverage the CLI for rapid experimentation and integration into CI/CD.
--By understanding these core layers—data, features, models, pipelines—and their configuration, you can tailor SalesForecasting for custom data sources, novel features, and advanced forecasting algorithms. I’m ready to draft the “Configuration & Customisation” subsection—please provide:
+1. The exact sub-topic you’d like (for example:  
+   - “YAML/JSON file schema and overrides”  
+   - “Environment-variable overrides”  
+   - “CLI flags and precedence rules”)  
+2. Any relevant code context or file summaries (e.g. contents of `config_loader.py`, sample `config.yml`, CLI-definition in `cli.py`)  
 
--The exact sub-topic you’d like (for example:
-“YAML/JSON file schema and overrides”
-“Environment-variable overrides”
-“CLI flags and precedence rules”)
-Any relevant code context or file summaries (e.g. contents of config_loader.py, sample config.yml, CLI-definition in cli.py)
-With those details, I’ll produce a focused markdown section showing how to tweak behavior without code changes. Could you specify which API Reference subsection for the Anknorx/salesforecasting repo you’d like drafted? For example:
+With those details, I’ll produce a focused markdown section showing how to tweak behavior without code changes.
+Could you specify which API Reference subsection for the Anknorx/salesforecasting repo you’d like drafted? For example:
 
-• “ForecastService.generateForecast” endpoint
-• “HistoricalDataClient” class methods
-• CLI command sf-forecast-run
+• “ForecastService.generateForecast” endpoint  
+• “HistoricalDataClient” class methods  
+• CLI command `sf-forecast-run`  
+
+Please share any relevant file summaries or method signatures so I can create a focused, actionable reference.
+Please provide the subsection title you’d like me to document and any relevant file summaries or context (e.g. key modules, classes or workflows from README.md or source files). With that information, I’ll craft a focused, actionable Developer Guide subsection for the Anknorx/salesforecasting repo.
