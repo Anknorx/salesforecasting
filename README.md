@@ -42,7 +42,7 @@ fc.fit(df, date_col="date", value_col="sales")
 forecast_df = fc.predict()
 print(forecast_df.head())
 
-Copy
+
 This snippet illustrates SalesForecasting’s end-to-end workflow: load data, fit the model, and retrieve forecasts ready for analysis or visualization. Which Getting Started subsection would you like next? Please provide the subsection title (for example, “Minimal Configuration” or “Running Your First Forecast”) and any relevant code snippets or file summaries so I can draft targeted, actionable documentation.
 
 Core Concepts & Architecture
@@ -105,7 +105,7 @@ logging:
   level: INFO
   file: logs/forecast.log
 
-Copy
+
 Load config in code:
 
 from salesforecasting.config import load_config
@@ -114,7 +114,7 @@ cfg = load_config("config.yaml")
 print(cfg.model.type)             # e.g. "xgboost"
 print(cfg.pipeline.forecast_horizon)
 
-Copy
+
 3. Data Ingestion Layer
 
 
@@ -132,7 +132,7 @@ conn = CsvConnector(path=cfg.data.path,
 loader = DataLoader(connector=conn)
 df_raw = loader.load()   # pandas DataFrame with date & target
 
-Copy
+
 Extend to new sources:
 
 # In data/connector.py
@@ -141,7 +141,7 @@ class MyApiConnector(BaseConnector):
         # call REST, parse JSON into DataFrame
         ...
 
-Copy
+
 4. Feature Engineering Layer
 
 
@@ -159,7 +159,7 @@ for window in cfg.features.rolling_windows:
 
 df_features = feat_pipe.transform(df_raw)
 
-Copy
+
 To add custom feature:
 
 # In features/custom.py
@@ -173,7 +173,7 @@ class HolidayIndicator(FeatureGenerator):
 # Register in pipeline:
 feat_pipe.add(HolidayIndicator())
 
-Copy
+
 5. Modeling Layer
 
 
@@ -185,7 +185,7 @@ model = XGBoostModel(**cfg.model.hyperparameters)
 model.fit(df_features)                    # trains on features + target
 future_preds = model.predict(horizon=30)  # returns pd.Series indexed by date
 
-Copy
+
 To implement a new model:
 
 # In models/my_model.py
@@ -197,7 +197,7 @@ class MyModel(ForecastModel):
     def predict(self, horizon):
         # inference logic
 
-Copy
+
 6. Pipeline Orchestration
 
 
@@ -210,7 +210,7 @@ from salesforecasting.pipelines.training import TrainingPipeline
 train_pipe = TrainingPipeline(config=cfg)
 train_pipe.run()   # loads data, applies features, trains & persists model
 
-Copy
+
 Forecasting:
 
 from salesforecasting.pipelines.forecasting import ForecastPipeline
@@ -219,7 +219,7 @@ forecast_pipe = ForecastPipeline(config=cfg)
 forecast_df = forecast_pipe.run()  # includes predictions + evaluation
 print(forecast_df.tail())
 
-Copy
+
 7. Command-Line Interface
 
 
@@ -231,16 +231,16 @@ salesforecast --config config.yaml train
 # Generate forecasts
 salesforecast --config config.yaml forecast
 
-Copy
+
 8. Extensibility & Customization
 
 
-Add connectors, feature generators, or models by subclassing respective base classes.
-Update config.yaml to include your new components.
-Leverage the CLI for rapid experimentation and integration into CI/CD.
-By understanding these core layers—data, features, models, pipelines—and their configuration, you can tailor SalesForecasting for custom data sources, novel features, and advanced forecasting algorithms. I’m ready to draft the “Configuration & Customisation” subsection—please provide:
+-Add connectors, feature generators, or models by subclassing respective base classes.
+-Update config.yaml to include your new components.
+-Leverage the CLI for rapid experimentation and integration into CI/CD.
+-By understanding these core layers—data, features, models, pipelines—and their configuration, you can tailor SalesForecasting for custom data sources, novel features, and advanced forecasting algorithms. I’m ready to draft the “Configuration & Customisation” subsection—please provide:
 
-The exact sub-topic you’d like (for example:
+-The exact sub-topic you’d like (for example:
 “YAML/JSON file schema and overrides”
 “Environment-variable overrides”
 “CLI flags and precedence rules”)
